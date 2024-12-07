@@ -1,0 +1,8 @@
+Processes,Communication Time (ms),Computation Time (ms)
+1,0,3613
+2,0,882
+4,281,446
+8,125,249
+16,106,356
+32,103,482
+64,295,507

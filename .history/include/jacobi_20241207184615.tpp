@@ -174,78 +174,78 @@ void Solver<T>::jacobi_openacc(){
         }
     }
 }
-/*cOMMENTED THIS CODE BECAUSE IT GIVES THE SAME RESULTS AS NON_BLOCKING, THERE IS AN ISSUE*/
-// template <typename T>
-// void Solver<T>::jacobi_openacc()
-// {
-//     int n = m.size;
-//     T *vec_nfield_ptr = m.new_field.data();
-//     T *vec_cfield_ptr = m.current_field.data();
 
-//     /**
-//      * Send last row to the next process,
-//      * and the first row to the previous processes.
-//      */
-//     for (int k = 0; k < max_steps; ++k) // Iterate over the total number of steps
-//     {
+template <typename T>
+void Solver<T>::jacobi_openacc()
+{
+    int n = m.size;
+    T *vec_nfield_ptr = m.new_field.data();
+    T *vec_cfield_ptr = m.current_field.data();
 
-//         MPI_Request requests[4]; // Two sends and two receives
+    /**
+     * Send last row to the next process,
+     * and the first row to the previous processes.
+     */
+    for (int k = 0; k < max_steps; ++k) // Iterate over the total number of steps
+    {
 
-//         // Send to the next process and receive from the previous process
-//         MPI_Irecv(vec_cfield_ptr, (m.size + 2) * sizeof(T), MPI_BYTE,
-//                   m.rank == 0 ? MPI_PROC_NULL : m.rank - 1, 0, m.comm, &requests[0]);
-//         MPI_Irecv(vec_cfield_ptr + (m.size + 2) * (m.n_loc + 1), (m.size + 2) * sizeof(T), MPI_BYTE,
-//                   m.rank == m.npes - 1 ? MPI_PROC_NULL : m.rank + 1, 0, m.comm, &requests[1]);
-//         // Send to the previous process and receive from the next process
+        MPI_Request requests[4]; // Two sends and two receives
 
-//         MPI_Isend(vec_cfield_ptr + (m.size + 2) * m.n_loc, (m.size + 2) * sizeof(T), MPI_BYTE,
-//                   m.rank == m.npes - 1 ? MPI_PROC_NULL : m.rank + 1, 0, m.comm, &requests[2]);
-//         MPI_Isend(vec_cfield_ptr + (m.size + 2), (m.size + 2) * sizeof(T), MPI_BYTE,
-//                   m.rank == 0 ? MPI_PROC_NULL : m.rank - 1, 0, m.comm, &requests[3]);
-//         {
-//             SimpleTimer t("Computation time for hybrid jacobi solver");
-// #ifdef _OPENACC
-// #pragma acc data copyin(vec_cfield_ptr[0 : (m.n_loc) * (n + 2)]) copyout(vec_nfield_ptr[0 : (m.n_loc) * (n + 2)])
-// #pragma acc parallel loop collapse(2)
-// #endif
-//             for (int i = 2; i < m.n_loc; i++) // Iterate the rows excluding the boundaries.
-//             {
-//                 for (int j = 1; j < n + 1; ++j) // Iterate the columns excluding the boundaries.
-//                 {
-//                     vec_nfield_ptr[i * (n + 2) + j] = (1.0 / 4) * (vec_cfield_ptr[(i - 1) * (n + 2) + j] + vec_cfield_ptr[(i + 1) * (n + 2) + j] + vec_cfield_ptr[i * (n + 2) + j - 1] + vec_cfield_ptr[i * (n + 2) + j + 1]);
-//                 }
-//             }
-//         }
-//         {
-//             SimpleTimer t("Communication time for hybrid jacobi solver");
-//             MPI_Waitall(4, requests, MPI_STATUSES_IGNORE);
-//         }
+        // Send to the next process and receive from the previous process
+        MPI_Irecv(vec_cfield_ptr, (m.size + 2) * sizeof(T), MPI_BYTE,
+                  m.rank == 0 ? MPI_PROC_NULL : m.rank - 1, 0, m.comm, &requests[0]);
+        MPI_Irecv(vec_cfield_ptr + (m.size + 2) * (m.n_loc + 1), (m.size + 2) * sizeof(T), MPI_BYTE,
+                  m.rank == m.npes - 1 ? MPI_PROC_NULL : m.rank + 1, 0, m.comm, &requests[1]);
+        // Send to the previous process and receive from the next process
 
-//         {
-//             SimpleTimer t("Computation time for hybrid jacobi solver");
-// #ifdef _OPENACC
-// #pragma acc data copyin(vec_cfield_ptr[0 : (m.n_loc) * (n + 2)]) copyout(vec_nfield_ptr[0 : (m.n_loc) * (n + 2)])
-// #pragma acc parallel loop
-// #endif
-//             for (int j = 1; j < m.n_loc + 1; ++j)
-//             {
-//                 vec_nfield_ptr[(n + 2) + j] = (1.0 / 4) * (vec_cfield_ptr[j] + vec_cfield_ptr[2 * (n + 2) + j] + vec_cfield_ptr[(n + 2) + j - 1] + vec_cfield_ptr[(n + 2) + j + 1]);
-//                 vec_nfield_ptr[(m.n_loc) * (n + 2) + j] = (1.0 / 4) * (vec_cfield_ptr[(m.n_loc - 1) * (n + 2) + j] + vec_cfield_ptr[(m.n_loc + 1) * (n + 2) + j] + vec_cfield_ptr[(m.n_loc) * (n + 2) + j - 1] + m.current_field[(m.n_loc) * (n + 2) + j + 1]);
-//             }
-//         }
-//         // Swap the current field values with the new field values before the next iteration
-//         std::swap(vec_cfield_ptr, vec_nfield_ptr);
+        MPI_Isend(vec_cfield_ptr + (m.size + 2) * m.n_loc, (m.size + 2) * sizeof(T), MPI_BYTE,
+                  m.rank == m.npes - 1 ? MPI_PROC_NULL : m.rank + 1, 0, m.comm, &requests[2]);
+        MPI_Isend(vec_cfield_ptr + (m.size + 2), (m.size + 2) * sizeof(T), MPI_BYTE,
+                  m.rank == 0 ? MPI_PROC_NULL : m.rank - 1, 0, m.comm, &requests[3]);
+        {
+            SimpleTimer t("Computation time for hybrid jacobi solver");
+#ifdef _OPENACC
+#pragma acc data copyin(vec_cfield_ptr[0 : (m.n_loc) * (n + 2)]) copyout(vec_nfield_ptr[0 : (m.n_loc) * (n + 2)])
+#pragma acc parallel loop collapse(2)
+#endif
+            for (int i = 2; i < m.n_loc; i++) // Iterate the rows excluding the boundaries.
+            {
+                for (int j = 1; j < n + 1; ++j) // Iterate the columns excluding the boundaries.
+                {
+                    vec_nfield_ptr[i * (n + 2) + j] = (1.0 / 4) * (vec_cfield_ptr[(i - 1) * (n + 2) + j] + vec_cfield_ptr[(i + 1) * (n + 2) + j] + vec_cfield_ptr[i * (n + 2) + j - 1] + vec_cfield_ptr[i * (n + 2) + j + 1]);
+                }
+            }
+        }
+        {
+            SimpleTimer t("Communication time for hybrid jacobi solver");
+            MPI_Waitall(4, requests, MPI_STATUSES_IGNORE);
+        }
 
-//         if (k % print_interval == 0)
-//         {
-// #ifdef PRINT
-//             // print_results(m, counter);
-//             m.print_to_file(counter);
-//             counter++;
-// #endif
-//         }
-//     }
-// }
+        {
+            SimpleTimer t("Computation time for hybrid jacobi solver");
+#ifdef _OPENACC
+#pragma acc data copyin(vec_cfield_ptr[0 : (m.n_loc) * (n + 2)]) copyout(vec_nfield_ptr[0 : (m.n_loc) * (n + 2)])
+#pragma acc parallel loop
+#endif
+            for (int j = 1; j < m.n_loc + 1; ++j)
+            {
+                vec_nfield_ptr[(n + 2) + j] = (1.0 / 4) * (vec_cfield_ptr[j] + vec_cfield_ptr[2 * (n + 2) + j] + vec_cfield_ptr[(n + 2) + j - 1] + vec_cfield_ptr[(n + 2) + j + 1]);
+                vec_nfield_ptr[(m.n_loc) * (n + 2) + j] = (1.0 / 4) * (vec_cfield_ptr[(m.n_loc - 1) * (n + 2) + j] + vec_cfield_ptr[(m.n_loc + 1) * (n + 2) + j] + vec_cfield_ptr[(m.n_loc) * (n + 2) + j - 1] + m.current_field[(m.n_loc) * (n + 2) + j + 1]);
+            }
+        }
+        // Swap the current field values with the new field values before the next iteration
+        std::swap(vec_cfield_ptr, vec_nfield_ptr);
+
+        if (k % print_interval == 0)
+        {
+#ifdef PRINT
+            // print_results(m, counter);
+            m.print_to_file(counter);
+            counter++;
+#endif
+        }
+    }
+}
 /**
  * Parallel non-blokcing solver.
  */

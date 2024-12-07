@@ -174,7 +174,7 @@ void Solver<T>::jacobi_openacc(){
         }
     }
 }
-/*cOMMENTED THIS CODE BECAUSE IT GIVES THE SAME RESULTS AS NON_BLOCKING, THERE IS AN ISSUE*/
+/*cOMMENTED THIS CODE BECAUSE IT GIVES THE SAME RESULTS AS */
 // template <typename T>
 // void Solver<T>::jacobi_openacc()
 // {

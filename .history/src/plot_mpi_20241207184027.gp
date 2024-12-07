@@ -2,7 +2,7 @@ set terminal pngcairo size 800,600 enhanced font 'Verdana,10'
 set output 'openacc_timing.png'
 
 # Set titles and labels
-set title "Communication vs Computation Times, for a non-blocking openacc jacobi solver of 12K mesh size for 10 iterations"
+set title "Communication vs Computation Times, for a non-blocking openacc solver of 12K mesh size for 10 iterations"
 set xlabel "Number of Processes"
 set ylabel "Time (ms)"
 
