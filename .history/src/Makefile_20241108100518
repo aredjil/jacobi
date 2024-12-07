@@ -1,0 +1,10 @@
+CC=mpic++
+FLAGS= -I../include 	-DNONB -o3 -march=native 
+NP=1
+mesh.x: main.cpp
+	$(CC) $(FLAGS) main.cpp -o $@ 
+run: 
+	mpirun -np $(NP) ./mesh.x
+clean:
+	rm -rf *.x
+flus: 

@@ -1,0 +1,13 @@
+CC=mpic++
+FLAGS= -I../include 	-DNONB -o3 -march=native 
+NP=1
+mesh.x: main.cpp
+	$(CC) $(FLAGS) main.cpp -o $@ 
+run: 
+	mpirun -np $(NP) ./mesh.x
+clean:
+	rm -rf *.x
+flush:
+	rm -rf ../data/*.dat
+	rm -rf ../data/*.txt
+	rm -rf ../gif/*.gif

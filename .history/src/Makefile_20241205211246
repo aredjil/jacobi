@@ -1,0 +1,14 @@
+CC=mpic++
+FLAGS= -fopenmp -I../include -o3 -march=native -Wall -Wextra 
+NP=4
+main.x: main.cpp
+	$(CC) $(FLAGS) main.cpp -o $@ 
+run: 
+	mpirun -np $(NP) ./mesh.x 120
+clean:
+	rm -rf *.x
+flush:
+	rm -rf ../data/*.dat
+	rm -rf ../data*.csv
+	rm -rf ../data/*.txt
+	rm -rf ../gif/*.gif
